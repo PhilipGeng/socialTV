@@ -1,0 +1,35 @@
+import numpy as np
+import cv2
+
+"""
+OpenCV code for playing a video and getting the frame number. 
+
+Adapted from:
+http://docs.opencv.org/trunk/doc/py_tutorials/py_gui/py_video_display/py_video_display.html
+"""
+def playVideo(videofile):
+    cap = cv2.VideoCapture(videofile)
+
+    frame_number = 0
+    while(cap.isOpened()):
+        # capture a frame from the video
+        ret, frame = cap.read()
+
+        # Display the frame in the window "video"
+        # the variable frame holds an image, just like a normal image
+        cv2.imshow('video', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        print frame_number
+        frame_number = frame_number+1
+
+    # release the video capture
+    cap.release()
+    cv2.destroyAllWindows()
+
+def main():
+    videofile = "video/movie.mp4"
+    playVideo(videofile)
+
+main()
+

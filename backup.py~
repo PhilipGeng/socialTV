@@ -1,0 +1,81 @@
+import numpy as np, cv2
+import transparency as tp
+import superimpose as si
+
+def play():
+	avatar_path = ["Alpaca","Cheetah","Leopard","Ringtail","Tiger"]
+	avatars = [0,0,0,0,0]
+	avatar_emotion = [0,0,0,0,0]
+	for i in range(len(avatars)):
+		avatar_emotion[i] = parseArff(avatar_path[i])
+	print len(avatar_emotion)
+	cap = cv2.VideoCapture("test.mp4")
+	video_w = 800
+	video_h = 400
+	frame_number = 0
+	while(cap.isOpened()):
+		frame_number+=1;
+		ret, frame = cap.read()
+		videoframe = tp.openFile(frame)
+		videoframe = cv2.resize(videoframe,(video_w,video_h))
+		for i in range(len(avatars)):
+			avatars[i] = prepareFrame(avatar_path[i],frame_number)
+
+		h1, w1 = videoframe.shape[:2]
+		h2, w2 = avatars[0].shape[:2]
+		dif = video_w/5-w2
+		view = np.zeros((h1+h2, w1,4), np.uint8)
+		view[:h1, :w1] = videoframe
+		view[h1:h1+h2, :w2] = avatars[0]
+		view[h1:h1+h2, w2+dif:2*(w2+dif)-dif] = avatars[1]
+		view[h1:h1+h2, 2*(w2+dif):3*(w2+dif)-dif] = avatars[2]	
+		view[h1:h1+h2, 3*(w2+dif):4*(w2+dif)-dif] = avatars[3]
+		view[h1:h1+h2, 4*(w2+dif):5*(w2+dif)-dif] = avatars[4]
+
+		for i in range(len(avatars)):
+			ss = getEmotion(avatar_emotion,i,frame_number)
+			view = si.superimpose(view, "emotion/"+ss+".jpg", 0.5, 0.5, h1-20, (video_w/5)*i+w2-dif)
+			cv2.putText(view,avatar_path[i]+"   "+ss, (i*video_w/5,550), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255))
+
+		cv2.imshow("test", view)
+		if cv2.waitKey(1) & 0xFF == ord('q'):
+		    break
+	cap.release()
+	cv2.destroyAllWindows()
+
+def getEmotion(avatar_emotion,i,frame_number):
+	if(len(avatar_emotion[i])>1 and frame_number>int(avatar_emotion[i][1][0])-1):
+		avatar_emotion[i].pop(0)
+	return avatar_emotion[i][0][1]
+
+
+
+def parseArff(animal):
+	path = "arff/"+animal+".predict.arff"
+   	f = open(path, "r")
+	line_num = 0;
+	instance = [];
+	for line in f:
+        	features = line.split(",")
+		if ((len(instance) == 0) or (features[len(features)-1]!=instance[len(instance)-1][1])):
+			instance.append([features[0],str.strip(features[len(features)-1])])
+	return instance
+
+
+def prepareFrame(animal,index):
+	avatar_w = 210
+	avatar_h = 210
+	path = "./avatars/"+animal+"/avatar1/frames"+str(index).rjust(6,'0')+".jpg"
+	if(animal == "Leopard"):
+		path = "./avatars/"+animal+"/avatar1/frame"+str(index).rjust(6,'0')+".jpg"
+	avatar = cv2.imread(path,cv2.IMREAD_UNCHANGED)
+	avatar = tp.openFile(avatar)
+	avatar = cv2.resize(avatar,(avatar_w,avatar_h))
+	if(animal == "Leopard"):
+		avatar = avatar[80:210,50:150]
+	else:
+		avatar = avatar[50:170, 70:150]
+	avatar = cv2.resize(avatar,(120,160))
+	return avatar
+	
+play()

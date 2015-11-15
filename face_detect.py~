@@ -1,0 +1,43 @@
+"""
+
+This program demonstrates how to write a simple face detector with openCV and Python.
+
+Execution:
+python face_detect.py <path to image> <path to haar classifier>
+
+Note: We need to run the version of Python from homebrew for this.
+"""
+import sys
+import cv2
+
+def main():
+    # Get user supplied values
+    imagePath = "1.png"
+    cascPath = "haarcascade_frontalface_default.xml"
+
+    # Create the haar cascade
+    faceCascade = cv2.CascadeClassifier(cascPath)
+
+    # Read the image
+    image = cv2.imread(imagePath)
+    colorMatrix = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    print image
+
+    # Detect faces in the image
+    faces = faceCascade.detectMultiScale(colorMatrix, scaleFactor=1.11,
+                                         minNeighbors=5,minSize=(30, 30),
+                                         flags = cv2.cv.CV_HAAR_SCALE_IMAGE)
+
+    print "Found %d faces!"%(len(faces))
+
+    # Draw a rectangle around each face
+    for dimensions in faces:
+        (x, y, w, h) = dimensions
+        cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        
+    cv2.imshow("Faces found" ,image)
+    cv2.waitKey(0)
+
+main()
+
+
